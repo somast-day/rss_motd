@@ -1,12 +1,427 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>test</title>
+  <title>RSS 좀비탈출서버</title>
+  <meta name="description" content="서버 FAQ 및 명령어 목록" />
+
+  <style>
+    :root{
+      --bg:#070a0f;
+      --panel:#0f1522;
+      --panel2:#0b111c;
+      --text:#e9eef7;
+      --muted:#a9b6c7;
+      --line:#1f2a3d;
+      --accent:#4da3ff;
+      --accent2:#53d28c;
+      --shadow: 0 16px 40px rgba(0,0,0,.45);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(900px 500px at 18% 10%, rgba(77,163,255,.16), transparent 60%),
+        radial-gradient(800px 500px at 85% 0%, rgba(83,210,140,.12), transparent 55%),
+        var(--bg);
+      line-height:1.65;
+    }
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    .wrap{max-width:980px; margin:0 auto; padding:18px 18px 70px}
+    header{
+      position:sticky; top:0; z-index:20;
+      backdrop-filter: blur(10px);
+      background: rgba(7,10,15,.75);
+      border-bottom:1px solid rgba(31,42,61,.8);
+    }
+    .top{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px;
+      padding:14px 18px;
+      max-width:980px;
+      margin:0 auto;
+    }
+    .title{
+      display:flex; flex-direction:column; gap:2px;
+    }
+    .title h1{margin:0; font-size:16px; letter-spacing:.2px}
+    .title p{margin:0; font-size:12px; color:var(--muted)}
+    .discord{
+      display:inline-flex; align-items:center; gap:10px;
+      padding:9px 12px;
+      border:1px solid rgba(31,42,61,.9);
+      background: rgba(15,21,34,.7);
+      border-radius:999px;
+      box-shadow: 0 10px 26px rgba(0,0,0,.25);
+      font-size:13px;
+      white-space:nowrap;
+    }
+    .discord .dot{
+      width:8px; height:8px; border-radius:999px;
+      background: var(--accent2);
+      box-shadow: 0 0 0 4px rgba(83,210,140,.12);
+    }
+
+    .card{
+      margin-top:18px;
+      background: rgba(15,21,34,.86);
+      border:1px solid rgba(31,42,61,.85);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    /* Tabs */
+    .tabs{
+      display:flex;
+      gap:8px;
+      padding:12px;
+      background: rgba(11,17,28,.65);
+      border-bottom:1px solid rgba(31,42,61,.8);
+    }
+    .tab{
+      appearance:none;
+      border:1px solid rgba(31,42,61,.9);
+      background: rgba(7,10,15,.25);
+      color:var(--muted);
+      border-radius:12px;
+      padding:10px 12px;
+      font-weight:600;
+      font-size:13px;
+      cursor:pointer;
+      transition: .15s ease;
+    }
+    .tab:hover{
+      filter: brightness(1.1);
+      color: var(--text);
+      border-color: rgba(77,163,255,.25);
+      background: rgba(77,163,255,.08);
+    }
+    .tab.active{
+      color: var(--text);
+      border-color: rgba(77,163,255,.45);
+      background: rgba(77,163,255,.14);
+    }
+
+    .panel{display:none; padding:16px}
+    .panel.active{display:block}
+
+    .section-title{
+      display:flex; align-items:baseline; justify-content:space-between;
+      gap:10px;
+      margin:4px 0 12px;
+    }
+    .section-title h2{margin:0; font-size:15px}
+    .hint{font-size:12px; color:var(--muted)}
+
+    /* FAQ (Accordion) */
+    details{
+      background: rgba(7,10,15,.25);
+      border:1px solid rgba(31,42,61,.8);
+      border-radius:14px;
+      padding:10px 12px;
+      margin:10px 0;
+    }
+    summary{
+      cursor:pointer;
+      font-weight:700;
+      color: var(--text);
+      outline:none;
+      list-style:none;
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px;
+    }
+    summary::-webkit-details-marker{display:none}
+    .chev{
+      color: var(--muted);
+      font-size:12px;
+      padding:4px 10px;
+      border-radius:999px;
+      border:1px solid rgba(31,42,61,.85);
+      background: rgba(11,17,28,.35);
+      white-space:nowrap;
+    }
+    details[open] .chev{color: var(--text); border-color: rgba(77,163,255,.35); background: rgba(77,163,255,.10)}
+    .answer{
+      color: var(--muted);
+      padding:10px 2px 2px;
+    }
+    .answer code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: rgba(11,17,28,.55);
+      border:1px solid rgba(31,42,61,.85);
+      border-radius:10px;
+      padding:2px 6px;
+      color: var(--text);
+      white-space:nowrap;
+    }
+
+    /* 여러 줄 코드용 */
+    .answer pre{
+      margin: 10px 0 0;
+      padding: 12px;              /* 박스 여백은 유지 */
+      border-radius: 14px;
+      border: 1px solid rgba(31,42,61,.85);
+      background: rgba(11,17,28,.55);
+      overflow-x: auto;
+    }
+
+    .answer pre code{
+      display: block;
+      padding-left: 0;
+      margin-left: 0;       
+      white-space: pre;
+      background: none;
+      border: none;
+      text-indent: 0;             /* 혹시 모를 들여쓰기 제거 */
+    }
+
+    /* Commands table */
+    .tablewrap{
+      overflow:auto;
+      border-radius:14px;
+      border:1px solid rgba(31,42,61,.85);
+      background: rgba(7,10,15,.22);
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:620px;
+    }
+    th, td{
+      padding:10px 10px;
+      border-bottom:1px solid rgba(31,42,61,.75);
+      text-align:left;
+      font-size:13px;
+      vertical-align:top;
+    }
+    th{color:var(--muted); font-weight:700; background: rgba(11,17,28,.35)}
+    tr:last-child td{border-bottom:none}
+    .cmd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: var(--text);
+      white-space:nowrap;
+    }
+    .tag{
+      display:inline-block;
+      font-size:11px;
+      padding:3px 8px;
+      border-radius:999px;
+      border:1px solid rgba(31,42,61,.85);
+      color: var(--muted);
+      background: rgba(11,17,28,.35);
+      margin-left:6px;
+      white-space:nowrap;
+    }
+
+    footer{
+      color: var(--muted);
+      font-size:12px;
+      padding:12px 16px;
+      border-top:1px solid rgba(31,42,61,.75);
+      background: rgba(11,17,28,.35);
+    }
+  </style>
 </head>
+
 <body>
-  test
+  <header>
+    <div class="top">
+      <div class="title">
+        <h1>RSS 좀비탈출서버</h1>
+        <p>FAQ / 명령어 목록</p>
+      </div>
+
+      <!-- 디스코드 링크: 여기 href만 바꾸면 됨 -->
+      <a class="discord" href="https://discord.gg/rssze" target="_blank" rel="noopener noreferrer">
+        <span class="dot"></span>
+        <span>디스코드 링크</span>
+      </a>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="card">
+      <div class="tabs" role="tablist" aria-label="메뉴 탭">
+        <button class="tab active" data-tab="faq" role="tab" aria-selected="true">1) 자주묻는 질문</button>
+        <button class="tab" data-tab="cmds" role="tab" aria-selected="false">2) 명령어 목록</button>
+      </div>
+
+      <!-- FAQ -->
+      <section id="faq" class="panel active" role="tabpanel">
+        <div class="section-title">
+          <h2>자주묻는 질문</h2>
+          <div class="hint">질문을 누르면 답이 펼쳐집니다.</div>
+        </div>
+
+        <!-- 아래 질문/답을 네 규칙에 맞게 추가/수정하면 됨 -->
+        <details>
+          <summary>
+            스토어 어떻게 사용하나요?
+            <span class="chev">열기/닫기</span>
+          </summary>
+
+          <div class="answer">
+            CS2에서 콘솔 열고 <code>exec menu_bind</code> 를 입력하세요.<br />
+            또는 아래 명령어를 콘솔에 입력해 단축키를 설정할 수도 있습니다.
+
+            <pre><code>bind 1 "slot1; menuselect 1";
+bind 2 "slot2; menuselect 2";
+bind 3 "slot3; menuselect 3";
+bind 4 "slot4; menuselect 4";
+bind 5 "slot5; menuselect 5";
+bind 6 "slot6; menuselect 6";
+bind 7 "slot7; menuselect 7";
+bind 8 "slot8; menuselect 8";
+bind 9 "slot9; menuselect 9";</code></pre>
+          </div>
+        </details>
+
+        <details>
+          <summary>
+            프레임이 너무 안 나와요 ㅠㅠ
+            <span class="chev">열기/닫기</span>
+          </summary>
+          <div class="answer">
+            총소리를 끄거나 하이드를 쓰면 프레임이 올라갈 수 있습니다.
+            <code>!stopsound</code>, <code>!hide 숫자</code> 명령어를 사용해 보세요.
+          </div>
+        </details>
+
+        <details>
+          <summary>
+            소리가 너무 커요 ㅠㅠ
+            <span class="chev">열기/닫기</span>
+          </summary>
+          <div class="answer">
+            노래소리가 너무 커요 : <code>snd_musicvolume (0~2)</code>  콘솔창에 입력 <br />
+            다른 사람 총소리가 너무 커요 : <code>!stopsound</code> 채팅창에 입력 <br />
+          </div>
+        </details>
+
+        <details>
+          <summary>
+            문의/신고는 어디로 하나요?
+            <span class="chev">열기/닫기</span>
+          </summary>
+          <div class="answer">
+            상단의 <b>디스코드 링크</b>로 들어와서 문의/신고 채널을 이용해 주세요.
+          </div>
+        </details>
+
+        <footer>
+          마지막 업데이트: <span id="lastUpdate">2026-01-30</span>
+          <!-- 마지막 업데이트: <span id="lastUpdate">-</span> -->
+        </footer>
+      </section>
+
+      <!-- Commands -->
+      <section id="cmds" class="panel" role="tabpanel">
+        <div class="section-title">
+          <h2>명령어 목록</h2>
+          <div class="hint">원하는 대로 행을 추가하면 됩니다.</div>
+        </div>
+
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 28%;">명령어</th>
+                <th>설명</th>
+                <th style="width: 30%;">예시</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- 아래는 예시. 너 서버에 맞게 바꿔서 쓰면 됨 -->
+              <tr>
+                <td><span class="cmd">!help</span> <span class="tag">채팅</span></td>
+                <td>도움말/기본 명령어를 보여줍니다.</td>
+                <td><span class="cmd">!help</span></td>
+              </tr>
+              <tr>
+                <td><span class="cmd">!rules</span> <span class="tag">채팅</span></td>
+                <td>규칙 요약을 출력합니다.</td>
+                <td><span class="cmd">!rules</span></td>
+              </tr>
+              <tr>
+                <td><span class="cmd">!rtv</span> <span class="tag">투표</span></td>
+                <td>맵 변경 투표를 시작/참여합니다.</td>
+                <td><span class="cmd">!rtv</span></td>
+              </tr>
+              <tr>
+                <td><span class="cmd">!nominate</span> <span class="tag">투표</span></td>
+                <td>원하는 맵을 후보로 올립니다.</td>
+                <td><span class="cmd">!nominate ze_mapname</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <footer>
+          팁: 명령어가 많아지면 “분류(태그)”를 더 추가해서 보기 쉽게 만들 수 있어요.
+        </footer>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    // 탭 전환 + URL 해시(#faq / #cmds) 지원 (공유 링크에도 좋음)
+    const tabs = document.querySelectorAll(".tab");
+    const panels = document.querySelectorAll(".panel");
+
+    function openTab(name, pushHash=true){
+      tabs.forEach(t => {
+        const active = t.dataset.tab === name;
+        t.classList.toggle("active", active);
+        t.setAttribute("aria-selected", active ? "true" : "false");
+      });
+      panels.forEach(p => p.classList.toggle("active", p.id === name));
+      if(pushHash) location.hash = name;
+    }
+
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => openTab(tab.dataset.tab));
+    });
+
+    window.addEventListener("load", () => {
+      const hash = (location.hash || "").replace("#", "");
+      if(hash === "faq" || hash === "cmds") openTab(hash, false);
+      else openTab("faq", false); // 기본은 FAQ
+    });
+
+    // async function setLastUpdateFromGitHub() {
+    //   const owner = "sj58320";
+    //   const repo  = "test";
+
+    //   try {
+    //     const res = await fetch(
+    //       `https://api.github.com/repos/${owner}/${repo}/commits?per_page=1`
+    //     );
+    //     if (!res.ok) throw new Error(res.status);
+
+    //     const data = await res.json();
+    //     const iso = data[0]?.commit?.committer?.date;
+    //     if (!iso) throw new Error("no date");
+
+    //     const d = new Date(iso);
+    //     const yyyy = d.getFullYear();
+    //     const mm = String(d.getMonth() + 1).padStart(2, "0");
+    //     const dd = String(d.getDate()).padStart(2, "0");
+
+    //     document.getElementById("lastUpdate").textContent =
+    //       `${yyyy}-${mm}-${dd}`;
+    //   } catch (e) {
+    //     console.warn("lastUpdate failed:", e);
+    //   }
+    // }
+
+    // window.addEventListener("load", setLastUpdateFromGitHub);
+  </script>
 </body>
 </html>
-r
